@@ -38,7 +38,8 @@ export * from "./errors";
 
 type BaseProvider = MetaMaskInpageProvider;
 
-export const IOTA_SNAP_ORIGIN = "npm:@3mate/iota-metamask-snap";
+// export const IOTA_SNAP_ORIGIN = "npm:@3mate/iota-metamask-snap";
+export const IOTA_SNAP_ORIGIN = "local:http://localhost:5050";
 export const SNAP_VERSION = "^0.0.1";
 
 export function registerIotaSnapWallet(): Wallet {
@@ -134,15 +135,16 @@ export async function signMessage(
   provider: BaseProvider,
   messageInput: IotaSignPersonalMessageInput
 ): Promise<IotaSignPersonalMessageOutput> {
-  const res = await signPersonalMessage(provider, messageInput);
-  return res;
+  return await signPersonalMessage(provider, messageInput);
 }
 
 export async function signTransaction(
   provider: BaseProvider,
   transactionInput: IotaSignTransactionInput
 ): Promise<IotaSignTransactionOutput> {
-  const serialized = serializeIotaSignTransactionBlockInput(transactionInput);
+  const serialized = await serializeIotaSignTransactionBlockInput(
+    transactionInput
+  );
 
   try {
     return (await provider.request({
@@ -164,8 +166,9 @@ export async function signAndExecuteTransaction(
   provider: BaseProvider,
   transactionInput: IotaSignTransactionInput
 ): Promise<IotaSignAndExecuteTransactionOutput> {
-  const serialized =
-    serializeIotaSignAndExecuteTransactionBlockInput(transactionInput);
+  const serialized = await serializeIotaSignAndExecuteTransactionBlockInput(
+    transactionInput
+  );
 
   try {
     return (await provider.request({

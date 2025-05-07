@@ -322,7 +322,9 @@ class WebSocketConnection {
       throw new IotaSnapError("WebSocket not connected");
     }
 
-    const serialized = serializeIotaSignTransactionBlockInput(transactionInput);
+    const serialized = await serializeIotaSignTransactionBlockInput(
+      transactionInput
+    );
 
     return new Promise((resolve, reject) => {
       const requestId = this.generateRequestId();
@@ -357,8 +359,9 @@ class WebSocketConnection {
       throw new IotaSnapError("WebSocket not connected");
     }
 
-    const serialized =
-      serializeIotaSignAndExecuteTransactionBlockInput(transactionInput);
+    const serialized = await serializeIotaSignAndExecuteTransactionBlockInput(
+      transactionInput
+    );
 
     return new Promise((resolve, reject) => {
       const requestId = this.generateRequestId();
