@@ -1,9 +1,9 @@
 import {
   ExecuteTransactionRequestType,
   SuiTransactionBlockResponseOptions,
-} from "@mysten/sui.js/client";
-import { TransactionBlock } from "@mysten/sui.js/transactions";
-import { fromB64, toB64 } from "@mysten/sui.js/utils";
+} from "@mysten/sui/client";
+import { Transaction } from "@mysten/sui/transactions";
+import { fromB64, toB64 } from "@mysten/sui/utils";
 import {
   SuiSignAndExecuteTransactionBlockInput,
   SuiSignPersonalMessageInput,
@@ -103,7 +103,7 @@ export function deserializeSuiSignTransactionBlockInput(
   input: SerializedSuiSignTransactionBlockInput
 ): SuiSignTransactionBlockInput {
   return {
-    transactionBlock: TransactionBlock.from(input.transactionBlock) as any,
+    transactionBlock: Transaction.from(input.transactionBlock) as any,
     account: deserializeWalletAccount(input.account),
     chain: input.chain as `${string}:${string}`,
   };
@@ -136,7 +136,7 @@ export function deserializeSuiSignAndExecuteTransactionBlockInput(
 ): SuiSignAndExecuteTransactionBlockInput {
   return {
     ...input,
-    transactionBlock: TransactionBlock.from(input.transactionBlock) as any,
+    transactionBlock: Transaction.from(input.transactionBlock) as any,
     account: deserializeWalletAccount(input.account),
     chain: input.chain as `${string}:${string}`,
     requestType: input.requestType as ExecuteTransactionRequestType | undefined,

@@ -7,7 +7,6 @@ import {
   useCurrentWallet,
   useSignPersonalMessage,
 } from "@mysten/dapp-kit";
-import { TransactionBlock } from "@mysten/sui.js/transactions";
 import { metaMaskAvailable } from "@/sui-snap-wallet";
 import { registerSuiMateWallet } from "@/sui-mate-wallet";
 

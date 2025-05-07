@@ -22,10 +22,10 @@ import {
   WalletAccount,
   getWallets,
 } from "@mysten/wallet-standard";
-import { ICON } from "./icon";
 import { MetaMaskInpageProvider } from "@metamask/providers";
-type BaseProvider = MetaMaskInpageProvider;
 import detectEthereumProvider from "@metamask/detect-provider";
+
+import { ICON } from "./icon";
 import {
   SerializedAdminSetFullnodeUrl,
   SerializedWalletAccount,
@@ -39,6 +39,8 @@ import { convertError } from "./errors";
 
 export * from "./types";
 export * from "./errors";
+
+type BaseProvider = MetaMaskInpageProvider;
 
 export const SNAP_ORIGIN = "npm:@3mate/sui-metamask-snap";
 export const SNAP_VERSION = "^0.0.1";
