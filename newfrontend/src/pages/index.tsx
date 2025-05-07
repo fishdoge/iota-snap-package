@@ -195,7 +195,9 @@ export default function Home() {
             height={38}
             priority
           />
-          <h1 className="text-3xl font-bold mt-8 mb-4">Iota Wallet Example</h1>
+          <h1 className="text-3xl font-bold mt-8 mb-4">
+            Iota Wallet Demo Example
+          </h1>
           <p className="text-center text-gray-600 dark:text-gray-400 mb-4">
             Connect to either Iota MetaMask Snap or Iota Mate Wallet
           </p>
