@@ -6,9 +6,9 @@ import {
   useCurrentAccount,
   useCurrentWallet,
   useSignPersonalMessage,
-} from "@mysten/dapp-kit";
-import { metaMaskAvailable } from "@/sui-snap-wallet";
-import { registerSuiMateWallet } from "@/sui-mate-wallet";
+} from "@iota/dapp-kit";
+import { metaMaskAvailable } from "@/iota-snap-wallet";
+import { registerIotaMateWallet } from "@/iota-mate-wallet";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -40,8 +40,8 @@ export default function Home() {
         const metaMaskState = await metaMaskAvailable();
         setFlaskInstalled(metaMaskState.available);
 
-        // Register Sui Mate Wallet
-        registerSuiMateWallet();
+        // Register Iota Mate Wallet
+        registerIotaMateWallet();
       } catch (e) {
         setFlaskInstalled(false);
         console.error(e);
@@ -54,7 +54,7 @@ export default function Home() {
   // Listen for messages from the popup window
   useEffect(() => {
     const handleMessage = (event: MessageEvent) => {
-      if (event.data && event.data.type === "sui-mate-wallet-connected") {
+      if (event.data && event.data.type === "iota-mate-wallet-connected") {
         console.log("Received connection from popup:", event.data);
         setWaitingForConnection(false);
         setQrCodeKey(null);
@@ -79,10 +79,10 @@ export default function Home() {
   }, []);
 
   const connectedToSnap =
-    isConnected && currentWallet?.name === "Sui MetaMask Snap";
+    isConnected && currentWallet?.name === "Iota MetaMask Snap";
 
   const connectedToMateWallet =
-    isConnected && currentWallet?.name === "Sui Mate Wallet";
+    isConnected && currentWallet?.name === "Iota Mate Wallet";
 
   // Handle QR code generation
   const handleGenerateQrCode = async () => {
@@ -130,7 +130,7 @@ export default function Home() {
       const connectUrl = `${window.location.origin}/connect?key=${key}`;
       popupRef.current = window.open(
         connectUrl,
-        "SuiMateWalletConnect",
+        "IotaMateWalletConnect",
         "width=500,height=700"
       );
     } catch (error) {
@@ -156,8 +156,8 @@ export default function Home() {
     }
 
     const messageText = connectedToMateWallet
-      ? "Hello Sui Mate Wallet!"
-      : "Hello Sui Snap!";
+      ? "Hello Iota Mate Wallet!"
+      : "Hello Iota Snap!";
 
     signPersonalMessage(
       {
@@ -195,9 +195,9 @@ export default function Home() {
             height={38}
             priority
           />
-          <h1 className="text-3xl font-bold mt-8 mb-4">Sui Wallet Example</h1>
+          <h1 className="text-3xl font-bold mt-8 mb-4">Iota Wallet Example</h1>
           <p className="text-center text-gray-600 dark:text-gray-400 mb-4">
-            Connect to either Sui MetaMask Snap or Sui Mate Wallet
+            Connect to either Iota MetaMask Snap or Iota Mate Wallet
           </p>
 
           {error && (
@@ -211,7 +211,7 @@ export default function Home() {
             <div className="bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-3 rounded relative mb-4 w-full">
               <strong className="font-bold">MetaMask Flask Required: </strong>
               <span className="block sm:inline">
-                Sui Snap requires MetaMask Flask, a canary distribution for
+                Iota Snap requires MetaMask Flask, a canary distribution for
                 developers with access to upcoming features.
                 <a
                   href="https://metamask.io/flask/"

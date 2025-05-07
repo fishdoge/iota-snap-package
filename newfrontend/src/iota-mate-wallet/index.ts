@@ -1,35 +1,31 @@
 import {
   ReadonlyWalletAccount,
-  SUI_CHAINS,
   StandardConnectFeature,
   StandardConnectMethod,
   StandardDisconnectFeature,
   StandardDisconnectMethod,
   StandardEventsFeature,
-  SuiFeatures,
-  SuiSignAndExecuteTransactionBlockMethod,
-  SuiSignAndExecuteTransactionBlockOutput,
-  SuiSignMessageInput,
-  SuiSignMessageMethod,
-  SuiSignMessageOutput,
-  SuiSignPersonalMessageInput,
-  SuiSignPersonalMessageMethod,
-  SuiSignPersonalMessageOutput,
-  SuiSignTransactionBlockInput,
-  SuiSignTransactionBlockMethod,
-  SuiSignTransactionBlockOutput,
+  IotaFeatures,
+  IotaSignAndExecuteTransactionMethod,
+  IotaSignAndExecuteTransactionOutput,
+  IotaSignPersonalMessageInput,
+  IotaSignPersonalMessageMethod,
+  IotaSignPersonalMessageOutput,
+  IotaSignTransactionInput,
+  IotaSignTransactionMethod,
+  IotaSignTransactionOutput,
   Wallet,
   WalletAccount,
   getWallets,
-} from "@mysten/wallet-standard";
+} from "@iota/wallet-standard";
 import { ICON } from "./icon";
 import {
   SerializedWalletAccount,
-  serializeSuiSignAndExecuteTransactionBlockInput,
-  serializeSuiSignMessageInput,
-  serializeSuiSignTransactionBlockInput,
+  serializeIotaSignAndExecuteTransactionBlockInput,
+  serializeIotaSignMessageInput,
+  serializeIotaSignTransactionBlockInput,
 } from "./types";
-import { convertError, SuiSnapError } from "./errors";
+import { convertError, IotaSnapError } from "./errors";
 import QRCode from "qrcode";
 
 export * from "./types";
@@ -38,16 +34,16 @@ export * from "./errors";
 // WebSocket server URL
 export const WEBSOCKET_SERVER_URL = "ws://localhost:3001";
 
-export function registerSuiMateWallet(): Wallet {
+export function registerIotaMateWallet(): Wallet {
   const wallets = getWallets();
   for (const wallet of wallets.get()) {
-    if (wallet.name === SuiMateWallet.NAME) {
-      console.warn("SuiMateWallet already registered");
+    if (wallet.name === IotaMateWallet.NAME) {
+      console.warn("IotaMateWallet already registered");
       return wallet;
     }
   }
 
-  const wallet = new SuiMateWallet();
+  const wallet = new IotaMateWallet();
   wallets.register(wallet as unknown as Wallet);
   return wallet;
 }
@@ -75,7 +71,7 @@ class WebSocketConnection {
 
   async connect(): Promise<ReadonlyWalletAccount[]> {
     if (this.isConnecting) {
-      throw new SuiSnapError("Already connecting to WebSocket");
+      throw new IotaSnapError("Already connecting to WebSocket");
     }
 
     if (this.isConnected && this.accounts) {
@@ -127,7 +123,7 @@ class WebSocketConnection {
         this.ws.onclose = this.handleClose;
         this.ws.onerror = (event) => {
           this.handleError(event);
-          reject(new SuiSnapError("WebSocket connection error"));
+          reject(new IotaSnapError("WebSocket connection error"));
         };
       } catch (error) {
         reject(error);
@@ -137,7 +133,7 @@ class WebSocketConnection {
 
   private async requestConnectionKey(): Promise<string> {
     if (!this.ws) {
-      throw new SuiSnapError("WebSocket not connected");
+      throw new IotaSnapError("WebSocket not connected");
     }
 
     return new Promise((resolve, reject) => {
@@ -157,7 +153,7 @@ class WebSocketConnection {
       setTimeout(() => {
         if (this.resolvers.has(requestId)) {
           this.resolvers.delete(requestId);
-          reject(new SuiSnapError("Connection key request timeout"));
+          reject(new IotaSnapError("Connection key request timeout"));
         }
       }, 30000); // 30 seconds timeout
     });
@@ -174,11 +170,11 @@ class WebSocketConnection {
       // Create popup window
       const popupWindow = window.open(
         "",
-        "SuiMateWalletQRCode",
+        "IotaMateWalletQRCode",
         "width=350,height=450"
       );
       if (!popupWindow) {
-        throw new SuiSnapError(
+        throw new IotaSnapError(
           "Could not open QR code popup. Please allow popups for this site."
         );
       }
@@ -188,7 +184,7 @@ class WebSocketConnection {
         <!DOCTYPE html>
         <html>
         <head>
-          <title>Sui Mate Wallet</title>
+          <title>Iota Mate Wallet</title>
           <style>
             body {
               font-family: Arial, sans-serif;
@@ -230,7 +226,7 @@ class WebSocketConnection {
         </head>
         <body>
           <div class="container">
-            <h2>Sui Mate Wallet</h2>
+            <h2>Iota Mate Wallet</h2>
             <p>Scan this QR code with your mobile wallet app</p>
             <img src="${qrCodeDataUrl}" alt="QR Code" />
             <div class="key">
@@ -243,7 +239,7 @@ class WebSocketConnection {
       `);
     } catch (error) {
       console.error("Error showing QR code:", error);
-      throw new SuiSnapError("Failed to display QR code");
+      throw new IotaSnapError("Failed to display QR code");
     }
   }
 
@@ -251,7 +247,7 @@ class WebSocketConnection {
     key: string
   ): Promise<ReadonlyWalletAccount[]> {
     if (!this.ws) {
-      throw new SuiSnapError("WebSocket not connected");
+      throw new IotaSnapError("WebSocket not connected");
     }
 
     return new Promise((resolve, reject) => {
@@ -271,20 +267,20 @@ class WebSocketConnection {
       setTimeout(() => {
         if (this.resolvers.has(requestId)) {
           this.resolvers.delete(requestId);
-          reject(new SuiSnapError("Authentication timeout"));
+          reject(new IotaSnapError("Authentication timeout"));
         }
       }, 300000); // 5 minutes timeout
     });
   }
 
   async signPersonalMessage(
-    messageInput: SuiSignPersonalMessageInput
-  ): Promise<SuiSignPersonalMessageOutput> {
+    messageInput: IotaSignPersonalMessageInput
+  ): Promise<IotaSignPersonalMessageOutput> {
     if (!this.ws || !this.isConnected || !this.connectionKey) {
-      throw new SuiSnapError("WebSocket not connected");
+      throw new IotaSnapError("WebSocket not connected");
     }
 
-    const serialized = serializeSuiSignMessageInput(messageInput);
+    const serialized = serializeIotaSignMessageInput(messageInput);
 
     return new Promise((resolve, reject) => {
       const requestId = this.generateRequestId();
@@ -306,31 +302,27 @@ class WebSocketConnection {
       setTimeout(() => {
         if (this.resolvers.has(requestId)) {
           this.resolvers.delete(requestId);
-          reject(new SuiSnapError("Sign personal message timeout"));
+          reject(new IotaSnapError("Sign personal message timeout"));
         }
       }, 60000); // 1 minute timeout
     });
   }
 
   async signMessage(
-    messageInput: SuiSignMessageInput
-  ): Promise<SuiSignMessageOutput> {
+    messageInput: IotaSignPersonalMessageInput
+  ): Promise<IotaSignPersonalMessageOutput> {
     const result = await this.signPersonalMessage(messageInput);
-
-    return {
-      messageBytes: result.bytes,
-      signature: result.signature,
-    };
+    return result;
   }
 
   async signTransactionBlock(
-    transactionInput: SuiSignTransactionBlockInput
-  ): Promise<SuiSignTransactionBlockOutput> {
+    transactionInput: IotaSignTransactionInput
+  ): Promise<IotaSignTransactionOutput> {
     if (!this.ws || !this.isConnected || !this.connectionKey) {
-      throw new SuiSnapError("WebSocket not connected");
+      throw new IotaSnapError("WebSocket not connected");
     }
 
-    const serialized = serializeSuiSignTransactionBlockInput(transactionInput);
+    const serialized = serializeIotaSignTransactionBlockInput(transactionInput);
 
     return new Promise((resolve, reject) => {
       const requestId = this.generateRequestId();
@@ -352,21 +344,21 @@ class WebSocketConnection {
       setTimeout(() => {
         if (this.resolvers.has(requestId)) {
           this.resolvers.delete(requestId);
-          reject(new SuiSnapError("Sign transaction block timeout"));
+          reject(new IotaSnapError("Sign transaction block timeout"));
         }
       }, 60000); // 1 minute timeout
     });
   }
 
   async signAndExecuteTransactionBlock(
-    transactionInput: SuiSignTransactionBlockInput
-  ): Promise<SuiSignAndExecuteTransactionBlockOutput> {
+    transactionInput: IotaSignTransactionInput
+  ): Promise<IotaSignAndExecuteTransactionOutput> {
     if (!this.ws || !this.isConnected || !this.connectionKey) {
-      throw new SuiSnapError("WebSocket not connected");
+      throw new IotaSnapError("WebSocket not connected");
     }
 
     const serialized =
-      serializeSuiSignAndExecuteTransactionBlockInput(transactionInput);
+      serializeIotaSignAndExecuteTransactionBlockInput(transactionInput);
 
     return new Promise((resolve, reject) => {
       const requestId = this.generateRequestId();
@@ -389,7 +381,7 @@ class WebSocketConnection {
         if (this.resolvers.has(requestId)) {
           this.resolvers.delete(requestId);
           reject(
-            new SuiSnapError("Sign and execute transaction block timeout")
+            new IotaSnapError("Sign and execute transaction block timeout")
           );
         }
       }, 120000); // 2 minutes timeout
@@ -405,7 +397,7 @@ class WebSocketConnection {
         this.resolvers.delete(data.id);
 
         if (data.error) {
-          reject(new SuiSnapError(data.error.message || "Unknown error"));
+          reject(new IotaSnapError(data.error.message || "Unknown error"));
         } else {
           resolve(data.result);
         }
@@ -442,8 +434,8 @@ export function isWebSocketAvailable(): boolean {
   return typeof WebSocket !== "undefined";
 }
 
-export class SuiMateWallet implements Wallet {
-  static NAME = "Sui Mate Wallet";
+export class IotaMateWallet implements Wallet {
+  static NAME = "Iota Mate Wallet";
   #connecting: boolean;
   #connected: boolean;
   #accounts: WalletAccount[] | null = null;
@@ -460,7 +452,7 @@ export class SuiMateWallet implements Wallet {
   }
 
   get name() {
-    return SuiMateWallet.NAME;
+    return IotaMateWallet.NAME;
   }
 
   get icon() {
@@ -468,7 +460,12 @@ export class SuiMateWallet implements Wallet {
   }
 
   get chains() {
-    return SUI_CHAINS;
+    return [
+      "iota:mainnet",
+      "iota:testnet",
+      "iota:devnet",
+      "iota:localnet",
+    ] as `${string}:${string}`[];
   }
 
   get connecting() {
@@ -485,7 +482,7 @@ export class SuiMateWallet implements Wallet {
 
   get features(): StandardConnectFeature &
     StandardDisconnectFeature &
-    SuiFeatures &
+    IotaFeatures &
     StandardEventsFeature {
     return {
       "standard:connect": {
@@ -496,19 +493,19 @@ export class SuiMateWallet implements Wallet {
         version: "1.0.0" as any,
         disconnect: this.#disconnect,
       },
-      "sui:signPersonalMessage": {
+      "iota:signPersonalMessage": {
         version: "1.0.0" as any,
         signPersonalMessage: this.#signPersonalMessage,
       },
-      "sui:signMessage": {
+      "iota:signMessage": {
         version: "1.0.0" as any,
         signMessage: this.#signMessage,
       },
-      "sui:signTransactionBlock": {
+      "iota:signTransactionBlock": {
         version: "1.0.0" as any,
         signTransactionBlock: this.#signTransactionBlock,
       },
-      "sui:signAndExecuteTransactionBlock": {
+      "iota:signAndExecuteTransactionBlock": {
         version: "1.0.0" as any,
         signAndExecuteTransactionBlock: this.#signAndExecuteTransactionBlock,
       },
@@ -557,7 +554,9 @@ export class SuiMateWallet implements Wallet {
     this.#accounts = null;
   };
 
-  #signPersonalMessage: SuiSignPersonalMessageMethod = async (messageInput) => {
+  #signPersonalMessage: IotaSignPersonalMessageMethod = async (
+    messageInput
+  ) => {
     if (!this.#connected) {
       throw new Error("Wallet not connected");
     }
@@ -569,11 +568,10 @@ export class SuiMateWallet implements Wallet {
     }
   };
 
-  #signMessage: SuiSignMessageMethod = async (messageInput) => {
+  #signMessage: IotaSignPersonalMessageMethod = async (messageInput) => {
     if (!this.#connected) {
       throw new Error("Wallet not connected");
     }
-
     try {
       return await this.#wsConnection.signMessage(messageInput);
     } catch (e) {
@@ -581,7 +579,7 @@ export class SuiMateWallet implements Wallet {
     }
   };
 
-  #signTransactionBlock: SuiSignTransactionBlockMethod = async (
+  #signTransactionBlock: IotaSignTransactionMethod = async (
     transactionInput
   ) => {
     if (!this.#connected) {
@@ -595,18 +593,19 @@ export class SuiMateWallet implements Wallet {
     }
   };
 
-  #signAndExecuteTransactionBlock: SuiSignAndExecuteTransactionBlockMethod =
-    async (transactionInput) => {
-      if (!this.#connected) {
-        throw new Error("Wallet not connected");
-      }
+  #signAndExecuteTransactionBlock: IotaSignAndExecuteTransactionMethod = async (
+    transactionInput
+  ) => {
+    if (!this.#connected) {
+      throw new Error("Wallet not connected");
+    }
 
-      try {
-        return await this.#wsConnection.signAndExecuteTransactionBlock(
-          transactionInput
-        );
-      } catch (e) {
-        throw convertError(e);
-      }
-    };
+    try {
+      return await this.#wsConnection.signAndExecuteTransactionBlock(
+        transactionInput
+      );
+    } catch (e) {
+      throw convertError(e);
+    }
+  };
 }

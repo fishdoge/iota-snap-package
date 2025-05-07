@@ -9,6 +9,9 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@iota/dapp-kit": "^0.4.4",
+    "@iota/iota-sdk": "^1.0.1",
+    "@iota/wallet-standard": "^0.2.8",
     "@metamask/detect-provider": "^2.0.0",
     "@metamask/providers": "^22.0.1",
     "@mysten/dapp-kit": "^0.15.7",
