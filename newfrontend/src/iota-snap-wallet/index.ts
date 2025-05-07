@@ -1,58 +1,57 @@
 import {
   ReadonlyWalletAccount,
-  SUI_CHAINS,
   StandardConnectFeature,
   StandardConnectMethod,
   StandardDisconnectFeature,
   StandardDisconnectMethod,
   StandardEventsFeature,
-  SuiFeatures,
-  SuiSignAndExecuteTransactionBlockMethod,
-  SuiSignAndExecuteTransactionBlockOutput,
-  SuiSignMessageInput,
-  SuiSignMessageMethod,
-  SuiSignMessageOutput,
-  SuiSignPersonalMessageInput,
-  SuiSignPersonalMessageMethod,
-  SuiSignPersonalMessageOutput,
-  SuiSignTransactionBlockInput,
-  SuiSignTransactionBlockMethod,
-  SuiSignTransactionBlockOutput,
+  IotaFeatures,
+  IotaSignAndExecuteTransactionMethod,
+  IotaSignAndExecuteTransactionOutput,
+  IotaSignPersonalMessageInput,
+  IotaSignPersonalMessageMethod,
+  IotaSignPersonalMessageOutput,
+  IotaSignTransactionInput,
+  IotaSignTransactionMethod,
+  IotaSignTransactionOutput,
   Wallet,
   WalletAccount,
   getWallets,
-} from "@mysten/wallet-standard";
-import { ICON } from "./icon";
+} from "@iota/wallet-standard";
 import { MetaMaskInpageProvider } from "@metamask/providers";
-type BaseProvider = MetaMaskInpageProvider;
 import detectEthereumProvider from "@metamask/detect-provider";
+
+import { ICON } from "./icon";
 import {
   SerializedAdminSetFullnodeUrl,
   SerializedWalletAccount,
   StoredState,
   deserializeWalletAccount,
-  serializeSuiSignAndExecuteTransactionBlockInput,
-  serializeSuiSignMessageInput,
-  serializeSuiSignTransactionBlockInput,
+  serializeIotaSignAndExecuteTransactionBlockInput,
+  serializeIotaSignMessageInput,
+  serializeIotaSignTransactionBlockInput,
 } from "./types";
 import { convertError } from "./errors";
 
 export * from "./types";
 export * from "./errors";
 
-export const SNAP_ORIGIN = "npm:@3mate/sui-metamask-snap";
+type BaseProvider = MetaMaskInpageProvider;
+
+// export const IOTA_SNAP_ORIGIN = "npm:@3mate/iota-metamask-snap";
+export const IOTA_SNAP_ORIGIN = "local:http://localhost:5050";
 export const SNAP_VERSION = "^0.0.1";
 
-export function registerSuiSnapWallet(): Wallet {
+export function registerIotaSnapWallet(): Wallet {
   const wallets = getWallets();
   for (const wallet of wallets.get()) {
-    if (wallet.name === SuiSnapWallet.NAME) {
-      console.warn("SuiSnapWallet already registered");
+    if (wallet.name === IotaSnapWallet.NAME) {
+      console.warn("IotaSnapWallet already registered");
       return wallet;
     }
   }
 
-  const wallet = new SuiSnapWallet();
+  const wallet = new IotaSnapWallet();
   wallets.register(wallet as unknown as Wallet);
   return wallet;
 }
@@ -63,7 +62,7 @@ export async function getAccounts(
   const res = (await provider.request({
     method: "wallet_invokeSnap",
     params: {
-      snapId: SNAP_ORIGIN,
+      snapId: IOTA_SNAP_ORIGIN,
       request: {
         method: "getAccounts",
       },
@@ -79,7 +78,7 @@ export async function admin_getStoredState(provider: BaseProvider) {
   const res = (await provider.request({
     method: "wallet_invokeSnap",
     params: {
-      snapId: SNAP_ORIGIN,
+      snapId: IOTA_SNAP_ORIGIN,
       request: {
         method: "admin_getStoredState",
       },
@@ -101,7 +100,7 @@ export async function admin_setFullnodeUrl(
   await provider.request({
     method: "wallet_invokeSnap",
     params: {
-      snapId: SNAP_ORIGIN,
+      snapId: IOTA_SNAP_ORIGIN,
       request: {
         method: "admin_setFullnodeUrl",
         params: JSON.parse(JSON.stringify(params)),
@@ -112,21 +111,21 @@ export async function admin_setFullnodeUrl(
 
 export async function signPersonalMessage(
   provider: BaseProvider,
-  messageInput: SuiSignPersonalMessageInput
-): Promise<SuiSignPersonalMessageOutput> {
-  const serialized = serializeSuiSignMessageInput(messageInput);
+  messageInput: IotaSignPersonalMessageInput
+): Promise<IotaSignPersonalMessageOutput> {
+  const serialized = serializeIotaSignMessageInput(messageInput);
 
   try {
     return (await provider.request({
       method: "wallet_invokeSnap",
       params: {
-        snapId: SNAP_ORIGIN,
+        snapId: IOTA_SNAP_ORIGIN,
         request: {
           method: "signPersonalMessage",
           params: JSON.parse(JSON.stringify(serialized)),
         },
       },
-    })) as SuiSignPersonalMessageOutput;
+    })) as IotaSignPersonalMessageOutput;
   } catch (e) {
     throw convertError(e);
   }
@@ -134,56 +133,54 @@ export async function signPersonalMessage(
 
 export async function signMessage(
   provider: BaseProvider,
-  messageInput: SuiSignMessageInput
-): Promise<SuiSignMessageOutput> {
-  const res = await signPersonalMessage(provider, messageInput);
-
-  return {
-    messageBytes: res.bytes,
-    signature: res.signature,
-  };
+  messageInput: IotaSignPersonalMessageInput
+): Promise<IotaSignPersonalMessageOutput> {
+  return await signPersonalMessage(provider, messageInput);
 }
 
-export async function signTransactionBlock(
+export async function signTransaction(
   provider: BaseProvider,
-  transactionInput: SuiSignTransactionBlockInput
-): Promise<SuiSignTransactionBlockOutput> {
-  const serialized = serializeSuiSignTransactionBlockInput(transactionInput);
+  transactionInput: IotaSignTransactionInput
+): Promise<IotaSignTransactionOutput> {
+  const serialized = await serializeIotaSignTransactionBlockInput(
+    transactionInput
+  );
 
   try {
     return (await provider.request({
       method: "wallet_invokeSnap",
       params: {
-        snapId: SNAP_ORIGIN,
+        snapId: IOTA_SNAP_ORIGIN,
         request: {
-          method: "signTransactionBlock",
+          method: "signTransaction",
           params: JSON.parse(JSON.stringify(serialized)),
         },
       },
-    })) as SuiSignTransactionBlockOutput;
+    })) as IotaSignTransactionOutput;
   } catch (e) {
     throw convertError(e);
   }
 }
 
-export async function signAndExecuteTransactionBlock(
+export async function signAndExecuteTransaction(
   provider: BaseProvider,
-  transactionInput: SuiSignTransactionBlockInput
-): Promise<SuiSignAndExecuteTransactionBlockOutput> {
-  const serialized =
-    serializeSuiSignAndExecuteTransactionBlockInput(transactionInput);
+  transactionInput: IotaSignTransactionInput
+): Promise<IotaSignAndExecuteTransactionOutput> {
+  const serialized = await serializeIotaSignAndExecuteTransactionBlockInput(
+    transactionInput
+  );
 
   try {
     return (await provider.request({
       method: "wallet_invokeSnap",
       params: {
-        snapId: SNAP_ORIGIN,
+        snapId: IOTA_SNAP_ORIGIN,
         request: {
-          method: "signAndExecuteTransactionBlock",
+          method: "signAndExecuteTransaction",
           params: JSON.parse(JSON.stringify(serialized)),
         },
       },
-    })) as SuiSignAndExecuteTransactionBlockOutput;
+    })) as IotaSignAndExecuteTransactionOutput;
   } catch (e) {
     throw convertError(e);
   }
@@ -193,7 +190,7 @@ export interface MetaMaskStatus {
   available: boolean;
   version?: string;
   supportsSnaps: boolean;
-  suiSnapInstalled: boolean;
+  iotaSnapInstalled: boolean;
 }
 
 export async function metaMaskAvailable(): Promise<MetaMaskStatus> {
@@ -204,13 +201,13 @@ export async function metaMaskAvailable(): Promise<MetaMaskStatus> {
     return {
       available: false,
       supportsSnaps: false,
-      suiSnapInstalled: false,
+      iotaSnapInstalled: false,
     };
   }
   if (!provider.isMetaMask) {
     return {
       available: false,
-      suiSnapInstalled: false,
+      iotaSnapInstalled: false,
       supportsSnaps: false,
     };
   }
@@ -221,26 +218,27 @@ export async function metaMaskAvailable(): Promise<MetaMaskStatus> {
     const snaps = await provider.request<Record<string, unknown>>({
       method: "wallet_getSnaps",
     });
-    const suiSnapInstalled = !!snaps && "npm:@3mate/sui-metamask-snap" in snaps;
+    const iotaSnapInstalled =
+      !!snaps && "npm:@3mate/iota-metamask-snap" in snaps;
 
     return {
       available: true,
       version: version!,
       supportsSnaps: true,
-      suiSnapInstalled,
+      iotaSnapInstalled,
     };
   } catch (e) {
     console.warn(e);
     return {
       available: true,
       supportsSnaps: false,
-      suiSnapInstalled: false,
+      iotaSnapInstalled: false,
     };
   }
 }
 
-export class SuiSnapWallet implements Wallet {
-  static NAME = "Sui MetaMask Snap";
+export class IotaSnapWallet implements Wallet {
+  static NAME = "Iota MetaMask Snap";
   #connecting: boolean;
   #connected: boolean;
 
@@ -256,7 +254,7 @@ export class SuiSnapWallet implements Wallet {
   }
 
   get name() {
-    return SuiSnapWallet.NAME;
+    return IotaSnapWallet.NAME;
   }
 
   get icon() {
@@ -264,7 +262,12 @@ export class SuiSnapWallet implements Wallet {
   }
 
   get chains() {
-    return SUI_CHAINS;
+    return [
+      "iota:mainnet",
+      "iota:testnet",
+      "iota:devnet",
+      "iota:localnet",
+    ] as `${string}:${string}`[];
   }
 
   get connecting() {
@@ -281,7 +284,7 @@ export class SuiSnapWallet implements Wallet {
 
   get features(): StandardConnectFeature &
     StandardDisconnectFeature &
-    SuiFeatures &
+    IotaFeatures &
     StandardEventsFeature {
     return {
       "standard:connect": {
@@ -292,21 +295,21 @@ export class SuiSnapWallet implements Wallet {
         version: "1.0.0" as any,
         disconnect: this.#disconnect,
       },
-      "sui:signPersonalMessage": {
+      "iota:signPersonalMessage": {
         version: "1.0.0" as any,
         signPersonalMessage: this.#signPersonalMessage,
       },
-      "sui:signMessage": {
+      "iota:signMessage": {
         version: "1.0.0" as any,
         signMessage: this.#signMessage,
       },
-      "sui:signTransactionBlock": {
+      "iota:signTransaction": {
         version: "1.0.0" as any,
-        signTransactionBlock: this.#signTransactionBlock,
+        signTransaction: this.#signTransaction,
       },
-      "sui:signAndExecuteTransactionBlock": {
+      "iota:signAndExecuteTransaction": {
         version: "1.0.0" as any,
-        signAndExecuteTransactionBlock: this.#signAndExecuteTransactionBlock,
+        signAndExecuteTransaction: this.#signAndExecuteTransaction,
       },
       "standard:events": {
         version: "1.0.0" as any,
@@ -341,7 +344,7 @@ export class SuiSnapWallet implements Wallet {
       await provider.request({
         method: "wallet_requestSnaps",
         params: {
-          [SNAP_ORIGIN]: {
+          [IOTA_SNAP_ORIGIN]: {
             version: SNAP_VERSION,
           },
         },
@@ -368,7 +371,9 @@ export class SuiSnapWallet implements Wallet {
     this.#accounts = null;
   };
 
-  #signPersonalMessage: SuiSignPersonalMessageMethod = async (messageInput) => {
+  #signPersonalMessage: IotaSignPersonalMessageMethod = async (
+    messageInput
+  ) => {
     const provider = (await detectEthereumProvider({
       silent: true,
     })) as BaseProvider | null;
@@ -378,7 +383,7 @@ export class SuiSnapWallet implements Wallet {
     return signPersonalMessage(provider, messageInput);
   };
 
-  #signMessage: SuiSignMessageMethod = async (messageInput) => {
+  #signMessage: IotaSignPersonalMessageMethod = async (messageInput) => {
     const provider = (await detectEthereumProvider({
       silent: true,
     })) as BaseProvider | null;
@@ -388,7 +393,17 @@ export class SuiSnapWallet implements Wallet {
     return signMessage(provider, messageInput);
   };
 
-  #signTransactionBlock: SuiSignTransactionBlockMethod = async (
+  #signTransaction: IotaSignTransactionMethod = async (transactionInput) => {
+    const provider = (await detectEthereumProvider({
+      silent: true,
+    })) as BaseProvider | null;
+    if (!provider) {
+      throw new Error("MetaMask not detected!");
+    }
+    return signTransaction(provider, transactionInput);
+  };
+
+  #signAndExecuteTransaction: IotaSignAndExecuteTransactionMethod = async (
     transactionInput
   ) => {
     const provider = (await detectEthereumProvider({
@@ -397,17 +412,6 @@ export class SuiSnapWallet implements Wallet {
     if (!provider) {
       throw new Error("MetaMask not detected!");
     }
-    return signTransactionBlock(provider, transactionInput);
+    return signAndExecuteTransaction(provider, transactionInput);
   };
-
-  #signAndExecuteTransactionBlock: SuiSignAndExecuteTransactionBlockMethod =
-    async (transactionInput) => {
-      const provider = (await detectEthereumProvider({
-        silent: true,
-      })) as BaseProvider | null;
-      if (!provider) {
-        throw new Error("MetaMask not detected!");
-      }
-      return signAndExecuteTransactionBlock(provider, transactionInput);
-    };
 }

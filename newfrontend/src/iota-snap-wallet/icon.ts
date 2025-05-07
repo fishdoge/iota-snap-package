@@ -1,5 +1,5 @@
 /**
- * Sui Snap wallet icon
+ * Iota Snap wallet icon
  */
 
 export const ICON =

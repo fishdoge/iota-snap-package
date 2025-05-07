@@ -1,16 +1,16 @@
 import {
   ExecuteTransactionRequestType,
-  SuiTransactionBlockResponseOptions,
-} from "@mysten/sui.js/client";
-import { TransactionBlock } from "@mysten/sui.js/transactions";
-import { fromB64, toB64 } from "@mysten/sui.js/utils";
+  IotaTransactionBlockResponseOptions,
+} from "@iota/iota-sdk/client";
+import { Transaction } from "@iota/iota-sdk/transactions";
+import { fromB64, toB64 } from "@iota/iota-sdk/utils";
 import {
-  SuiSignAndExecuteTransactionBlockInput,
-  SuiSignPersonalMessageInput,
-  SuiSignTransactionBlockInput,
+  IotaSignAndExecuteTransactionInput,
+  IotaSignPersonalMessageInput,
+  IotaSignTransactionInput,
   WalletAccount,
   WalletIcon,
-} from "@mysten/wallet-standard";
+} from "@iota/wallet-standard";
 
 /**
  * Passing in objects directly to the Snap sometimes doesn't work correctly so we need to serialize to primitive values
@@ -56,90 +56,87 @@ export function deserializeWalletAccount(
   };
 }
 
-/* ======== SerializedSuiSignMessageInput ======== */
+/* ======== SerializedIotaSignMessageInput ======== */
 
-export interface SerializedSuiSignMessageInput {
+export interface SerializedIotaSignMessageInput {
   message: string;
   account: SerializedWalletAccount;
 }
 
-export function serializeSuiSignMessageInput(
-  input: SuiSignPersonalMessageInput
-): SerializedSuiSignMessageInput {
+export function serializeIotaSignMessageInput(
+  input: IotaSignPersonalMessageInput
+): SerializedIotaSignMessageInput {
   return {
     message: toB64(input.message),
     account: serializeWalletAccount(input.account),
   };
 }
 
-export function deserializeSuiSignMessageInput(
-  input: SerializedSuiSignMessageInput
-): SuiSignPersonalMessageInput {
+export function deserializeIotaSignMessageInput(
+  input: SerializedIotaSignMessageInput
+): IotaSignPersonalMessageInput {
   return {
     message: fromB64(input.message),
     account: deserializeWalletAccount(input.account),
   };
 }
 
-/* ======== SerializedSuiSignTransactionBlockInput ======== */
+/* ======== SerializedIotaSignTransactionBlockInput ======== */
 
-export interface SerializedSuiSignTransactionBlockInput {
-  transactionBlock: string;
+export interface SerializedIotaSignTransactionBlockInput {
+  transaction: string;
   account: SerializedWalletAccount;
   chain: string;
 }
 
-export function serializeSuiSignTransactionBlockInput(
-  input: SuiSignTransactionBlockInput
-): SerializedSuiSignTransactionBlockInput {
+export async function serializeIotaSignTransactionBlockInput(
+  input: IotaSignTransactionInput
+): Promise<SerializedIotaSignTransactionBlockInput> {
   return {
-    transactionBlock: input.transactionBlock.serialize(),
+    transaction: await input.transaction.toJSON(),
     account: serializeWalletAccount(input.account),
     chain: input.chain,
   };
 }
 
-export function deserializeSuiSignTransactionBlockInput(
-  input: SerializedSuiSignTransactionBlockInput
-): SuiSignTransactionBlockInput {
+export function deserializeIotaSignTransactionBlockInput(
+  input: SerializedIotaSignTransactionBlockInput
+): IotaSignTransactionInput {
   return {
-    transactionBlock: TransactionBlock.from(input.transactionBlock) as any,
+    transaction: Transaction.from(input.transaction) as any,
     account: deserializeWalletAccount(input.account),
     chain: input.chain as `${string}:${string}`,
   };
 }
 
-/* ======== SerializedSuiSignAndExecuteTransactionBlockInput ======== */
+/* ======== SerializedIotaSignAndExecuteTransactionBlockInput ======== */
 
-export interface SerializedSuiSignAndExecuteTransactionBlockInput {
-  transactionBlock: string;
+export interface SerializedIotaSignAndExecuteTransactionBlockInput {
+  transaction: string;
   account: SerializedWalletAccount;
   chain: string;
-  requestType?: string;
-  options?: SuiTransactionBlockResponseOptions;
+  options?: IotaTransactionBlockResponseOptions;
 }
 
-export function serializeSuiSignAndExecuteTransactionBlockInput(
-  input: SuiSignAndExecuteTransactionBlockInput
-): SerializedSuiSignAndExecuteTransactionBlockInput {
+export async function serializeIotaSignAndExecuteTransactionBlockInput(
+  input: IotaSignAndExecuteTransactionInput
+): Promise<SerializedIotaSignAndExecuteTransactionBlockInput> {
   return {
-    transactionBlock: input.transactionBlock.serialize(),
+    transaction: await input.transaction.toJSON(),
     account: serializeWalletAccount(input.account),
     chain: input.chain,
-    requestType: input.requestType,
     options: input.options,
   };
 }
 
-export function deserializeSuiSignAndExecuteTransactionBlockInput(
-  input: SerializedSuiSignAndExecuteTransactionBlockInput
-): SuiSignAndExecuteTransactionBlockInput {
+export function deserializeIotaSignAndExecuteTransactionBlockInput(
+  input: SerializedIotaSignAndExecuteTransactionBlockInput
+): IotaSignAndExecuteTransactionInput {
   return {
     ...input,
-    transactionBlock: TransactionBlock.from(input.transactionBlock) as any,
+    transaction: Transaction.from(input.transaction) as any,
     account: deserializeWalletAccount(input.account),
     chain: input.chain as `${string}:${string}`,
-    requestType: input.requestType as ExecuteTransactionRequestType | undefined,
   };
 }
 

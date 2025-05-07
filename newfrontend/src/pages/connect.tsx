@@ -4,7 +4,7 @@ import {
   ConnectModal,
   useCurrentAccount,
   useCurrentWallet,
-} from "@mysten/dapp-kit";
+} from "@iota/dapp-kit";
 import { Geist, Geist_Mono } from "next/font/google";
 
 const geistSans = Geist({
@@ -89,7 +89,7 @@ export default function Connect() {
       if (window.opener) {
         window.opener.postMessage(
           {
-            type: "sui-mate-wallet-connected",
+            type: "iota-mate-wallet-connected",
             address: currentAccount.address,
             publicKey: currentAccount.publicKey
               ? btoa(
@@ -120,7 +120,7 @@ export default function Connect() {
       <main className="flex flex-col gap-[32px] row-start-2 items-center w-full max-w-3xl">
         <div className="flex flex-col items-center gap-4 w-full">
           <h1 className="text-3xl font-bold mt-8 mb-4">
-            Connect to Sui Mate Wallet
+            Connect to Iota Mate Wallet
           </h1>
 
           {error && (
@@ -147,7 +147,7 @@ export default function Connect() {
           ) : (
             <div className="flex flex-col gap-4 w-full">
               <p className="text-center text-gray-600 dark:text-gray-400 mb-4">
-                Connect your wallet to authenticate with Sui Mate Wallet
+                Connect your wallet to authenticate with Iota Mate Wallet
               </p>
 
               <ConnectModal
@@ -172,7 +172,7 @@ export default function Connect() {
                     onClick={handleConnect}
                     className="mt-4 px-4 py-2 rounded-md bg-green-500 hover:bg-green-600 text-white w-full"
                   >
-                    Connect to Sui Mate Wallet
+                    Connect to Iota Mate Wallet
                   </button>
                 </div>
               )}

@@ -2,19 +2,20 @@ import "@/styles/globals.css";
 import type { AppProps } from "next/app";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import {
-  SuiClientProvider,
   WalletProvider,
   createNetworkConfig,
-} from "@mysten/dapp-kit";
-import { registerSuiSnapWallet } from "@/sui-snap-wallet";
-import "@mysten/dapp-kit/dist/index.css";
+  IotaClientProvider,
+} from "@iota/dapp-kit";
+import { registerIotaSnapWallet } from "@/iota-snap-wallet";
+import { getFullnodeUrl } from "@iota/iota-sdk/client";
+import "@iota/dapp-kit/dist/index.css";
 
-// Register the Sui Snap wallet
-registerSuiSnapWallet();
+// Register the Iota Snap wallet
+registerIotaSnapWallet();
 
-// Create a network config for Sui
+// Create a network config for Iota
 const { networkConfig } = createNetworkConfig({
-  testnet: { url: "https://fullnode.testnet.sui.io:443" },
+  testnet: { url: getFullnodeUrl("testnet") },
 });
 
 // Create a React Query client
@@ -23,11 +24,11 @@ const queryClient = new QueryClient();
 export default function App({ Component, pageProps }: AppProps) {
   return (
     <QueryClientProvider client={queryClient}>
-      <SuiClientProvider networks={networkConfig} network="testnet">
+      <IotaClientProvider networks={networkConfig} network="testnet">
         <WalletProvider>
           <Component {...pageProps} />
         </WalletProvider>
-      </SuiClientProvider>
+      </IotaClientProvider>
     </QueryClientProvider>
   );
 }
