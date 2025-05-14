@@ -49,6 +49,8 @@ export function convertError(error: unknown): Error {
     return error;
   }
 
+  console.error("error from convertError", error);
+
   if (typeof error === "string") {
     if (error.includes("User rejected")) {
       return new IotaSnapUserRejectedError();

@@ -6,9 +6,11 @@ import {
   useCurrentAccount,
   useCurrentWallet,
   useSignPersonalMessage,
+  useSignAndExecuteTransaction,
 } from "@iota/dapp-kit";
 import { metaMaskAvailable } from "@/iota-snap-wallet";
 import { registerIotaMateWallet } from "@/iota-mate-wallet";
+import { Transaction } from "@iota/iota-sdk/transactions";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -32,6 +34,8 @@ export default function Home() {
   const { isConnected, currentWallet } = useCurrentWallet();
   const currentAccount = useCurrentAccount();
   const { mutate: signPersonalMessage } = useSignPersonalMessage();
+  const { mutateAsync: signAndExecuteTransaction } =
+    useSignAndExecuteTransaction();
 
   // Check if MetaMask is available and register wallets
   useEffect(() => {
@@ -181,6 +185,31 @@ export default function Home() {
     );
   };
 
+  const handleSignAndExecuteTransaction = async () => {
+    if (!(connectedToSnap || connectedToMateWallet) || !currentAccount) {
+      return;
+    }
+
+    const tx = new Transaction();
+    tx.moveCall({
+      target:
+        "0x2a0ff66020df12a278b341b2184c919d68c2267ac4e16c3c4deafb09614ab7af::iota_move_snap::add_number",
+      arguments: [tx.pure.u64(1), tx.pure.u64(2)],
+    });
+
+    await signAndExecuteTransaction(
+      {
+        transaction: tx,
+        chain: "iota:testnet",
+      },
+      {
+        onSuccess: (result) => {
+          console.log("executed transaction", result);
+        },
+      }
+    );
+  };
+
   return (
     <div
       className={`${geistSans.className} ${geistMono.className} grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]`}
@@ -297,6 +326,10 @@ export default function Home() {
                     </pre>
                   </div>
                 )}
+
+                <button onClick={handleSignAndExecuteTransaction}>
+                  Sign and Execute Transaction
+                </button>
               </div>
             )}
           </div>
