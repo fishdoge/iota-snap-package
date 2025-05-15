@@ -14,6 +14,18 @@ import { metaMaskAvailable } from "@/iota-snap-wallet";
 import { registerIotaMateWallet } from "@/iota-mate-wallet";
 import { Transaction } from "@iota/iota-sdk/transactions";
 import { IOTA_DECIMALS } from "@iota/iota-sdk/utils";
+import {
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { DialogContent } from "@/components/ui/dialog";
+import { Dialog } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { toast } from "sonner";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -32,6 +44,13 @@ export default function Home() {
   const [qrCodeKey, setQrCodeKey] = useState<string | null>(null);
   const [showQrCode, setShowQrCode] = useState(false);
   const [waitingForConnection, setWaitingForConnection] = useState(false);
+
+  // Transfer
+  const [amount, setAmount] = useState<string>("");
+  const [recipient, setRecipient] = useState<string>("");
+  const [isTransferring, setIsTransferring] = useState<boolean>(false);
+  const [txHash, setTxHash] = useState<string | null>(null);
+
   const popupRef = useRef<Window | null>(null);
 
   const { isConnected, currentWallet } = useCurrentWallet();
@@ -209,15 +228,16 @@ export default function Home() {
 
   const handleSignAndExecuteTransaction = async () => {
     if (!(connectedToSnap || connectedToMateWallet) || !currentAccount) {
-      return;
+      throw new Error("No wallet connected");
     }
 
+    setIsTransferring(true);
+
     const tx = new Transaction();
-    tx.moveCall({
-      target:
-        "0x2a0ff66020df12a278b341b2184c919d68c2267ac4e16c3c4deafb09614ab7af::iota_move_snap::add_number",
-      arguments: [tx.pure.u64(1), tx.pure.u64(2)],
-    });
+    const coin = tx.splitCoins(tx.gas, [
+      tx.pure.u64(Number(amount) * 10 ** IOTA_DECIMALS),
+    ]);
+    tx.transferObjects([coin], recipient);
 
     await signAndExecuteTransaction(
       {
@@ -227,9 +247,19 @@ export default function Home() {
       {
         onSuccess: (result) => {
           console.log("executed transaction", result);
+          setTxHash(result.digest);
+          toast.success(
+            `Transaction executed successfully: https://explorer.iota.org/txblock/${result.digest}?network=testnet`
+          );
+        },
+        onError: (error) => {
+          console.error(error);
+          toast.error("Transaction failed");
         },
       }
     );
+
+    setIsTransferring(false);
   };
 
   return (
@@ -246,6 +276,7 @@ export default function Home() {
             height={38}
             priority
           />
+
           <h1 className="text-3xl font-bold mt-8 mb-4">
             Iota Wallet Demo Example
           </h1>
@@ -322,7 +353,7 @@ export default function Home() {
 
             {(connectedToSnap || connectedToMateWallet) && currentAccount && (
               <div className="flex flex-col gap-4 w-full">
-                <div className="flex flex-col gap-2 bg-gray-100 dark:bg-gray-800 p-4 rounded-md">
+                <div className="flex flex-col gap-2 bg-gray-500 p-4 rounded-md">
                   <h3 className="font-bold mb-2">Connected Account</h3>
                   <p className="text-sm mb-2">
                     <span className="font-semibold">Wallet:</span>{" "}
@@ -348,12 +379,64 @@ export default function Home() {
                   >
                     Sign Message
                   </button>
-                  <button
-                    onClick={handleSignAndExecuteTransaction}
-                    className="flex-1 px-4 py-2 rounded-md bg-blue-500 hover:bg-green-600 text-white"
-                  >
-                    Transfer
-                  </button>
+                  <div className="flex-1">
+                    <Dialog
+                      onOpenChange={(open) => {
+                        if (!open) {
+                          setTxHash(null);
+                        }
+                      }}
+                    >
+                      <DialogTrigger className="w-full flex-1 px-4 py-2 rounded-md bg-blue-500 hover:bg-blue-600 text-white">
+                        Transfer
+                      </DialogTrigger>
+                      <DialogContent>
+                        <DialogHeader>
+                          <DialogTitle>Transfer your token</DialogTitle>
+                          <DialogDescription>
+                            This action cannot be undone. This will permanently
+                            delete your account and remove your data from our
+                            servers.
+                          </DialogDescription>
+                          <Input
+                            className="my-5"
+                            type="number"
+                            placeholder="Amount"
+                            value={amount}
+                            onChange={(e) => setAmount(e.target.value)}
+                          />
+                          <Input
+                            className="my-5"
+                            type="text"
+                            placeholder="Recipient"
+                            value={recipient}
+                            onChange={(e) => setRecipient(e.target.value)}
+                          />
+                          <DialogFooter className="w-full flex justify-between">
+                            <div className="flex-3">
+                              {txHash && (
+                                <a
+                                  href={`https://explorer.iota.org/txblock/${txHash}?network=testnet`}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="text-blue-500 hover:text-blue-600"
+                                >
+                                  Tx Result
+                                </a>
+                              )}
+                            </div>
+                            <Button
+                              className="flex-1"
+                              onClick={handleSignAndExecuteTransaction}
+                              disabled={isTransferring}
+                            >
+                              {isTransferring ? "Transferring..." : "Transfer"}
+                            </Button>
+                          </DialogFooter>
+                        </DialogHeader>
+                      </DialogContent>
+                    </Dialog>
+                  </div>
                 </div>
 
                 {signatureResult && (

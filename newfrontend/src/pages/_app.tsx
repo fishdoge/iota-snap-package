@@ -9,6 +9,7 @@ import {
 import { registerIotaSnapWallet } from "@/iota-snap-wallet";
 import { getFullnodeUrl } from "@iota/iota-sdk/client";
 import "@iota/dapp-kit/dist/index.css";
+import { Toaster } from "sonner";
 
 // Register the Iota Snap wallet
 registerIotaSnapWallet();
@@ -27,6 +28,7 @@ export default function App({ Component, pageProps }: AppProps) {
       <IotaClientProvider networks={networkConfig} network="testnet">
         <WalletProvider>
           <Component {...pageProps} />
+          <Toaster />
         </WalletProvider>
       </IotaClientProvider>
     </QueryClientProvider>
