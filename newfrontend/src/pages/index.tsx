@@ -7,10 +7,13 @@ import {
   useCurrentWallet,
   useSignPersonalMessage,
   useSignAndExecuteTransaction,
+  useIotaClientQuery,
+  useIotaClientContext,
 } from "@iota/dapp-kit";
 import { metaMaskAvailable } from "@/iota-snap-wallet";
 import { registerIotaMateWallet } from "@/iota-mate-wallet";
 import { Transaction } from "@iota/iota-sdk/transactions";
+import { IOTA_DECIMALS } from "@iota/iota-sdk/utils";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -36,6 +39,25 @@ export default function Home() {
   const { mutate: signPersonalMessage } = useSignPersonalMessage();
   const { mutateAsync: signAndExecuteTransaction } =
     useSignAndExecuteTransaction();
+
+  const ctx = useIotaClientContext();
+
+  // console.log("Current Account", currentAccount);
+  console.log("Context", ctx);
+  const {
+    data: balance,
+    isPending,
+    isError,
+    refetch,
+  } = useIotaClientQuery(
+    "getBalance",
+    { owner: currentAccount?.address! },
+    {
+      gcTime: 10000,
+    }
+  );
+
+  console.log(balance);
 
   // Check if MetaMask is available and register wallets
   useEffect(() => {
@@ -300,7 +322,7 @@ export default function Home() {
 
             {(connectedToSnap || connectedToMateWallet) && currentAccount && (
               <div className="flex flex-col gap-4 w-full">
-                <div className="bg-gray-100 dark:bg-gray-800 p-4 rounded-md">
+                <div className="flex flex-col gap-2 bg-gray-100 dark:bg-gray-800 p-4 rounded-md">
                   <h3 className="font-bold mb-2">Connected Account</h3>
                   <p className="text-sm mb-2">
                     <span className="font-semibold">Wallet:</span>{" "}
@@ -309,14 +331,30 @@ export default function Home() {
                   <p className="font-mono text-sm break-all">
                     {currentAccount.address}
                   </p>
+                  <p>
+                    Balance:{" "}
+                    {balance
+                      ? Number(balance.totalBalance) / 10 ** IOTA_DECIMALS
+                      : 0}{" "}
+                    IOTA
+                  </p>
+                  <p>Network: {ctx.network}</p>
                 </div>
 
-                <button
-                  onClick={handleSignMessage}
-                  className="px-4 py-2 rounded-md bg-green-500 hover:bg-green-600 text-white"
-                >
-                  Sign Message
-                </button>
+                <div className="w-full flex gap-2">
+                  <button
+                    onClick={handleSignMessage}
+                    className="flex-1 px-4 py-2 rounded-md bg-green-500 hover:bg-green-600 text-white"
+                  >
+                    Sign Message
+                  </button>
+                  <button
+                    onClick={handleSignAndExecuteTransaction}
+                    className="flex-1 px-4 py-2 rounded-md bg-blue-500 hover:bg-green-600 text-white"
+                  >
+                    Transfer
+                  </button>
+                </div>
 
                 {signatureResult && (
                   <div className="bg-gray-100 dark:bg-gray-800 p-4 rounded-md">
@@ -326,10 +364,6 @@ export default function Home() {
                     </pre>
                   </div>
                 )}
-
-                <button onClick={handleSignAndExecuteTransaction}>
-                  Sign and Execute Transaction
-                </button>
               </div>
             )}
           </div>
