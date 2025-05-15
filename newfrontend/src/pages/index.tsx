@@ -440,7 +440,7 @@ export default function Home() {
                 </div>
 
                 {signatureResult && (
-                  <div className="bg-gray-100 dark:bg-gray-800 p-4 rounded-md">
+                  <div className="bg-gray-500p-4 rounded-md">
                     <h3 className="font-bold mb-2">Signature Result</h3>
                     <pre className="font-mono text-sm overflow-auto">
                       {signatureResult}
